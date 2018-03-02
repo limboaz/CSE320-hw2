@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
      */
     int id, j;
     int af;
+	int look = 1;
     uint64_t size;
     int mem_cnt = 0;
     int add_flag = 1;
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
 	    //Check if ID is valid
 	for (id = 1; id < 4; id++){
 		for (j = 1; j >= 0; j--){ //Check flag, allocated ones first
-			while( add_flag != 0 ){ //Whether adding to buffer or not
+			while( look == 1 ){ //Whether adding to buffer or not
 				while(mem_cnt < MEM_MAX){ //Trace the memory
 					cursor = ram + mem_cnt;
 					size = *((uint64_t *)cursor) & -8; //Get size
@@ -60,12 +61,12 @@ int main(int argc, char** argv) {
 						add_flag = checkSize(cursor, &tmp_size);	// Same here
 					if (add_flag == 1){
 						min = cursor;
+						printf("Current min: %p\n", min);
 					}
-				
 					mem_cnt += (size == 0) ? WSIZE : size;
 				}
 				if ( min != NULL ){
-					//printf("%p\t%p\t%p\n", min, cursor, buffer);
+					//printf("Min: %p\nCursor: %p\nBuffer: %p\n", min, cursor, buffer);
 					if(cse320_sbrk(tmp_size)){
 						memcpy(buffer, min, tmp_size);	//added
 						int m;
@@ -93,9 +94,11 @@ int main(int argc, char** argv) {
 						printf("SBRK_ERROR");
 						exit(errno);
 					}
-				}
+				} else 
+					look = 0;
 				mem_cnt = 0;
 			}
+			look = 1;
 			add_flag = 1;
 		}
 	}
