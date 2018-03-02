@@ -43,16 +43,16 @@ int main(int argc, char** argv) {
     int tmp_size = 1024;
 	int buffer_size = 0;
 	void * min;
-    printf("ram: %p\n", ram);
-    printf("tmp_buffer: %p\n", tmp_buf);
-    printf("seg fault: %lu\n", *((uint64_t *)ram + 256));
-
+    //printf("ram: %p\n", ram);
+    //printf("tmp_buffer: %p\n", tmp_buf);
+   
 	    //Check if ID is valid
 	for (id = 1; id < 4; id++){
-		for (j = 1; j >= 0; j--){
-			while( add_flag != 0 ){
-				while(mem_cnt < MEM_MAX){
-					size = *((uint64_t *)cursor) & -8;
+		for (j = 1; j >= 0; j--){ //Check flag, allocated ones first
+			while( add_flag != 0 ){ //Whether adding to buffer or not
+				while(mem_cnt < MEM_MAX){ //Trace the memory
+					cursor = ram + mem_cnt;
+					size = *((uint64_t *)cursor) & -8; //Get size
 					add_flag = checkID(cursor, id);	// Match the current id loop
 					if(add_flag == 1)
 						add_flag = checkFlag(cursor, j);	// If add-flag is 0 at this point, this will just be skipped
@@ -61,21 +61,35 @@ int main(int argc, char** argv) {
 					if (add_flag == 1){
 						min = cursor;
 					}
-					mem_cnt += (size == 0) ? 1 : size;
+				
+					mem_cnt += (size == 0) ? WSIZE : size;
 				}
 				if ( min != NULL ){
+					//printf("%p\t%p\t%p\n", min, cursor, buffer);
 					if(cse320_sbrk(tmp_size)){
-						memcpy(min, buffer, tmp_size);
+						memcpy(buffer, min, tmp_size);	//added
 						int m;
 						for (m = 0; m < tmp_size; m += WSIZE){
 							*((uint64_t *)min) = 0;
 							min += WSIZE;
+						}	//erasing the added block in mem
+						int prev_size = *((uint64_t *)(buffer - WSIZE)) & -8;
+						void *prev = buffer - prev_size;
+						buffer += tmp_size;	//buffer now point to the new end
+						buffer -= WSIZE;	//Move it to the footer
+						if (*((uint64_t *)buffer) % 2 == 0 
+								&& *((uint64_t *)prev) % 2 == 0
+									&& checkID(prev, id) == 1){
+							*((uint64_t *)prev) += tmp_size;
+							*((uint64_t *)buffer) += prev_size;
 						}
-						buffer += tmp_size;
+						buffer += WSIZE;
 						buffer_size += tmp_size;
 						min = NULL;
+						printf("%d\n", tmp_size);
 						tmp_size = 1024;
 					} else {
+						printf("%d\n", tmp_size);
 						printf("SBRK_ERROR");
 						exit(errno);
 					}
@@ -89,9 +103,9 @@ int main(int argc, char** argv) {
 	// Add the last empty block
 	cse320_sbrk(16);
 	*((uint64_t *)buffer) = 16;
-	buffer += 8;
+	buffer += WSIZE;
 	*((uint64_t *)buffer) = 16;
-	memcpy(tmp_buf + 128, ram, buffer_size + 16);
+	memcpy(ram, tmp_buf + 128, buffer_size + 16);
 
     /*
      * Do not modify code below.   
