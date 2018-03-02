@@ -61,7 +61,6 @@ int main(int argc, char** argv) {
 						add_flag = checkSize(cursor, &tmp_size);	// Same here
 					if (add_flag == 1){
 						min = cursor;
-						printf("Current min: %p\n", min);
 					}
 					mem_cnt += (size == 0) ? WSIZE : size;
 				}
@@ -87,7 +86,6 @@ int main(int argc, char** argv) {
 						buffer += WSIZE;
 						buffer_size += tmp_size;
 						min = NULL;
-						printf("%d\n", tmp_size);
 						tmp_size = 1024;
 					} else {
 						printf("%d\n", tmp_size);
