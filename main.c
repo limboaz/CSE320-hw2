@@ -20,12 +20,11 @@ int checkSize(void * ptr, int* tmp_size){
 	} else return 0;
 }
 
-
 int main(int argc, char** argv) {
     if (*(argv + 1) == NULL) {
         printf("You should provide name of the test file.\n");
         return 1;
-    }
+    } 
     void* ram = cse320_init(*(argv + 1));
     void* tmp_buf = cse320_tmp_buffer_init();
     int ret = 0;
@@ -35,6 +34,10 @@ int main(int argc, char** argv) {
      * You code goes below. Do not modify provided parts
      * of the code.
      */
+	if (errno != 0){
+		printf("INIT_ERROR");
+		exit(errno);
+	}
     int id, j;
     int af;
 	int look = 1;
@@ -88,7 +91,7 @@ int main(int argc, char** argv) {
 						min = NULL;
 						tmp_size = 1024;
 					} else {
-						printf("%d\n", tmp_size);
+						//printf("%d\n", tmp_size);
 						printf("SBRK_ERROR");
 						exit(errno);
 					}
@@ -102,11 +105,15 @@ int main(int argc, char** argv) {
 	}
 
 	// Add the last empty block
-	cse320_sbrk(16);
+	if (cse320_sbrk(16)){
 	*((uint64_t *)buffer) = 16;
 	buffer += WSIZE;
 	*((uint64_t *)buffer) = 16;
 	memcpy(ram, tmp_buf + 128, buffer_size + 16);
+	}else{
+	printf("SBRK_ERROR");
+	exit(errno);
+	}
 
     /*
      * Do not modify code below.   
